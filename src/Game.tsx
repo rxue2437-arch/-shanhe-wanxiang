@@ -81,7 +81,7 @@ export default function Game() {
     setSavedGame(game);
   }, [game]);
 
-  const selectedEra = useMemo(() => eras.find((item) => item.id === draft.eraId) ?? eras[7], [draft.eraId]);
+  const selectedEra = useMemo(() => eras.find((item) => item.id === draft.eraId) ?? eras.find((item) => item.id === "custom")!, [draft.eraId]);
   const selectedIdentity = useMemo(() => identities.find((item) => item.id === draft.identityId) ?? identities.find((item) => item.id === "scholar")!, [draft.identityId]);
 
   const startGame = () => {
@@ -103,7 +103,7 @@ export default function Game() {
     setGame(next); setStage("play"); setTab("chronicle"); window.scrollTo(0, 0);
   };
 
-  const currentEra = game ? (eras.find((item) => item.id === game.character.eraId) ?? eras[9]) : selectedEra;
+  const currentEra = game ? (eras.find((item) => item.id === game.character.eraId) ?? eras.find((item) => item.id === "custom")!) : selectedEra;
   const currentIdentity = game ? (identities.find((item) => item.id === game.character.identityId) ?? identities.find((item) => item.id === "custom")!) : selectedIdentity;
   const event = game ? getEvent(game) : null;
 
