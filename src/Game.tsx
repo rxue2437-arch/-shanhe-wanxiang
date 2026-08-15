@@ -23,6 +23,7 @@ import {
 
 const SAVE_KEY = "shanhe-wanxiang-save-v2";
 const monthNames = ["正月", "二月", "三月", "四月", "五月", "六月", "七月", "八月", "九月", "十月", "冬月", "腊月"];
+const identityGroupOrder: Identity["group"][] = ["民生", "技艺", "士林", "方外", "江湖", "商旅", "官府", "军政", "宫廷", "自定"];
 
 type Stage = "cover" | "create" | "play" | "ended";
 type Tab = "chronicle" | "profile" | "family" | "world";
@@ -81,7 +82,7 @@ export default function Game() {
   }, [game]);
 
   const selectedEra = useMemo(() => eras.find((item) => item.id === draft.eraId) ?? eras[7], [draft.eraId]);
-  const selectedIdentity = useMemo(() => identities.find((item) => item.id === draft.identityId) ?? identities[6], [draft.identityId]);
+  const selectedIdentity = useMemo(() => identities.find((item) => item.id === draft.identityId) ?? identities.find((item) => item.id === "scholar")!, [draft.identityId]);
 
   const startGame = () => {
     const era = draft.modeId === "random" ? eras[Math.floor(Math.random() * (eras.length - 1))] : selectedEra;
@@ -103,7 +104,7 @@ export default function Game() {
   };
 
   const currentEra = game ? (eras.find((item) => item.id === game.character.eraId) ?? eras[9]) : selectedEra;
-  const currentIdentity = game ? (identities.find((item) => item.id === game.character.identityId) ?? identities[13]) : selectedIdentity;
+  const currentIdentity = game ? (identities.find((item) => item.id === game.character.identityId) ?? identities.find((item) => item.id === "custom")!) : selectedIdentity;
   const event = game ? getEvent(game) : null;
 
   const choose = (choice: Choice) => {
@@ -194,7 +195,7 @@ function Create({ draft, setDraft, era, identity, onBack, onStart }: { draft: Dr
   return <main className="create-shell"><header className="topbar"><button className="ghost-icon" onClick={onBack} aria-label="返回">‹</button><div><span>命册</span><small>世界开始前的身份记录</small></div><span className="step-mark">始</span></header>
     <section className="form-section"><Heading number="01" title="请选择时代" note="可填写具体年份；历史事实优先于新生成内容" /><div className="era-list complete-era-list">{eras.map((item) => <button key={item.id} className={draft.eraId === item.id ? "era-option active" : "era-option"} onClick={() => chooseEra(item)}><strong>{item.label}</strong><small>{item.id === "custom" ? "由具体年份与模式建立世界" : `默认 ${item.defaultYear} 年`}</small></button>)}</div><label className="wide-field">具体年份<input type="number" value={draft.exactYear} onChange={(e) => update("exactYear", Number(e.target.value))} /></label></section>
     <section className="form-section"><Heading number="02" title="历史模式" note="模式改变历史锚点如何约束世界，不会改变现实因果" /><div className="mode-grid">{historyModes.map((item) => <button key={item.id} className={draft.modeId === item.id ? "mode-option active" : "mode-option"} onClick={() => update("modeId", item.id)}><strong>{item.label}</strong><small>{item.description}</small></button>)}</div></section>
-    <section className="form-section"><Heading number="03" title="你想从什么身份开始" note="身份不是职业；户籍、家庭、资源和社会认知分别存在" /><div className="origin-grid complete-origin-grid">{identities.map((item) => <button key={item.id} className={draft.identityId === item.id ? "origin-option active" : "origin-option"} onClick={() => chooseIdentity(item)}><b>{item.label.slice(0, 1)}</b><strong>{item.label}</strong><small>{item.description}</small></button>)}</div></section>
+    <section className="form-section"><Heading number="03" title="你想从什么身份开始" note="完整保留原设定身份；身份不是职业，户籍、家庭、资源与公众认知分别存在" /><div className="identity-groups">{identityGroupOrder.map((group) => <section className="identity-group" key={group}><h3>{group}</h3><div className="origin-grid complete-origin-grid">{identities.filter((item) => item.group === group).map((item) => <button key={item.id} className={draft.identityId === item.id ? "origin-option active" : "origin-option"} onClick={() => chooseIdentity(item)}><b>{item.label.slice(0, 1)}</b><strong>{item.label}</strong><small>{item.description}</small></button>)}</div></section>)}</div></section>
     <section className="form-section identity-section"><Heading number="04" title="写下这一世" note="系统不会替你决定感受、悔恨或人生目标" /><label>姓名<input value={draft.name} maxLength={12} onChange={(e) => update("name", e.target.value)} placeholder="输入姓名" /></label><div className="segmented" aria-label="性别">{["男", "女", "自定"].map((item) => <button key={item} className={draft.gender === item ? "active" : ""} onClick={() => update("gender", item)}>{item}</button>)}</div><div className="field-pair"><label>年龄<input type="number" min="0" max="90" value={draft.age} onChange={(e) => update("age", Number(e.target.value))} /></label><label>初始财富（贯）<input type="number" min="0" value={draft.wealth} onChange={(e) => update("wealth", Number(e.target.value))} /></label></div><label>籍贯<input value={draft.birthplace} onChange={(e) => update("birthplace", e.target.value)} placeholder="州、府、县或具体村落" /></label><label>家庭情况<textarea value={draft.family} onChange={(e) => update("family", e.target.value)} placeholder="家庭成员、田产、债务、关系" /></label><label>当前职业<input value={draft.occupation} onChange={(e) => update("occupation", e.target.value)} /></label><label>人生目标<textarea value={draft.goal} onChange={(e) => update("goal", e.target.value)} placeholder="目标可在经历中改变" /></label></section>
     <section className="creation-summary"><small>即将进入</small><strong>{era.label} · {draft.exactYear}年 · {historyModes.find((item) => item.id === draft.modeId)?.label}</strong><p>{identity.label}｜{draft.birthplace || "籍贯未定"}｜{draft.age}岁</p></section>
     <div className="sticky-action"><div><small>此世身份</small><strong>{draft.name || "尚未署名"} · {identity.label}</strong></div><button disabled={!ready} onClick={onStart}>世界开始</button></div></main>;
